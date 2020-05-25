@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="en">
+<head th:replace="layouts/layout.html :: head">
+    <title>Главная</title>
+</head>
+<body>
+<div th:replace="layouts/layout.html :: header"></div>
+
+<div class="container text-center">
+
+        <div class="row justify-content-center" sec:authorize="isAuthenticated()">
+            <h3 class="text-black-50 mb-5" th:inline="text">Hello [[${#httpServletRequest.remoteUser}]]!
+            </h3>
+        </div>
+
+        <div sec:authorize="!isAuthenticated()">
+            <form action="/login" method="get">
+                <button class="btn btn-lg btn-primary col-4" type="submit">Войти</button>
+            </form>
+            <br>
+            <form action="/registration" method="get">
+                <button class="btn btn-lg btn-primary col-4" type="submit">Регистрация</button>
+            </form>
+        </div>
+
+        <div sec:authorize="isAuthenticated()">
+            <form action="/user/profile" method="get">
+                <button class="btn btn-lg btn-primary col-4" type="submit">Профиль</button>
+            </form>
+        </div>
+
+</div>
+<footer th:replace="layouts/layout.html :: footer"></footer>
+</body>
+</html>

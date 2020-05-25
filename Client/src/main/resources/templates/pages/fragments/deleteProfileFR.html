@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+>
+<head>
+    <meta charset="UTF-8">
+    <title>Delete Profile</title>
+</head>
+<body>
+<div th:fragment="deleteProfile">
+    <div class="modal fade" id="deleteProfileModal" tabindex="-1" role="dialog"
+         aria-labelledby="deleteProfileModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteProfileModalLabel"></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+
+                    <div class="col-md-auto order-md-1">
+                        <div class="col-md-auto mb-3">
+                            <form id="deleteProfile">
+                                <input type="hidden" name="id" id="idDel"/>
+                                Имя:<input class="form-control mb-2" type="text" name="username"
+                                           id="usernameDel" readonly/>
+                                Пароль:<input class="form-control mb-5" type="text" name="password"
+                                              id="passwordDel" readonly/>
+
+                                <ul sec:authorize="hasAnyRole('ROLE_ADMIN')" id="rolesDel">
+
+                                </ul>
+                                <button class="btn btn-danger btn-lg mr-2" data-dismiss="modal"
+                                        th:onclick="|sendFormDeleteProfile()|">Удалить
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-lg float-right"
+                                        data-dismiss="modal">Отмена
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

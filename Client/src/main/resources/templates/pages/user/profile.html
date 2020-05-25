@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+>
+<head th:replace="layouts/layout.html :: head">
+    <title>Профиль</title>
+</head>
+<body>
+<div th:replace="layouts/layout.html :: header"></div>
+<div class="container-fluid">
+    <div class="row">
+        <nav class="col-md-2 d-none d-md-block bg-light sidebar">
+            <div class="sidebar-sticky">
+                <ul class="nav flex-column">
+                    <li class="nav-item" sec:authorize="hasAnyRole('ROLE_ADMIN')">
+                        <a class="nav-link active" href="#table" id="adminPanelButton" th:onclick="|loadAdminPanel();|">
+                            Admin panel</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#table" id="profileButton"
+                           th:onclick="|loadProfile(${user.id});|">Профиль</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
+            <div class="tab-content" id="nav-tabContent">
+                <div class="tab-pane fade show active" id="list-admin" role="tabpanel"
+                     aria-labelledby="list-admin-list">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h2 id="panel">Profile</h2>
+                    </div>
+
+
+                    <nav class="navbar navbar-expand-md navbar-light position-sticky bg-transparent" id="adminNav"
+                         sec:authorize="hasAnyRole('ROLE_ADMIN')">
+
+                    </nav>
+
+                    <div class="tab-content nav-tabContent">
+                        <div class="tab-pane fade show active" id="adminPanel" role="tabpanel"
+                             aria-labelledby="adminPanelTab">
+                            <div class="table-header">
+                                <div class="col mt-2 font-weight-bold">All users</div>
+                            </div>
+
+                            <table class="table table-striped table-sm mb-5" id="table">
+                                <thead>
+                                <tr>
+                                    <th>id</th>
+                                    <th>Имя</th>
+                                    <th>Пароль</th>
+                                    <th>Права</th>
+                                    <th></th>
+                                </tr>
+                                </thead>
+                                <tbody id="table-users">
+
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="tab-pane fade" id="addUser" role="tabpanel" aria-labelledby="addUserTab" sec:authorize="hasAnyRole('ROLE_ADMIN')">
+                            <div class="table-header mr-n2 ">
+                                <div class="col mt-2 font-weight-bold">New user</div>
+                            </div>
+
+                            <div class="col-md-8 order-md-1">
+                                <div class="col-md-6 mb-3">
+                                    <form id="addUserForm">
+                                        <input class="form-control mb-2" type="text" name="username"
+                                               placeholder="Имя"
+                                               required>
+                                        <input class="form-control mb-3" type="text" name="password"
+                                               placeholder="Пароль" required>
+                                        <button class="btn btn-success" onclick="addUserFunc()" type="submit">
+                                            Добавить
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+<div th:insert="fragments/editProfileFR.html :: editProfile"></div>
+<div th:insert="fragments/deleteProfileFR.html :: deleteProfile"></div>
+<footer th:replace="layouts/layout.html :: footer"></footer>
+
+<th:block sec:authorize="hasAnyRole('ROLE_ADMIN')">
+    <script>
+        function loadAdminPanel() {
+            $('#table-users').empty();
+            $('#panel').text('Admin panel');
+            $.getJSON('http://localhost:8080/admin/getUsers', function (users) {
+                    fillTableUsers(users);
+                }
+            )
+            let nav = [];
+
+            nav.push('<div class="nav nav-tabs" id="nav-tab" role="tablist">' +
+                '<a class="nav-item nav-link active" id="adminPanelTab" data-toggle="tab" href="#adminPanel"' +
+                ' role="tab" aria-controls="adminPanel" aria-selected="true">User table</a>' +
+                '<a class="nav-item nav-link" id="addUserTab" data-toggle="tab" href="#addUser" role="tab"' +
+                ' aria-controls="addUser" aria-selected="false">New user</a></div>');
+
+            $('#adminNav').empty().append($(nav.join('')));
+        }
+    </script>
+
+    <script>
+        function addUserFunc() {
+            $.post('http://localhost:8080/admin/add',
+                $("#addUserForm").serialize()
+            )
+        }
+    </script>
+
+    <script>
+        function getProfileForEdit(id) {
+            $('#rolesEdit').empty();
+            $('#rolesDel').empty();
+            $.getJSON('http://localhost:8080/admin/getUserEdit/' + id, function (userEdit) {
+                document.getElementById('editProfileModalLabel').textContent = 'Edit user - ' + userEdit.username;
+                document.getElementById('deleteProfileModalLabel').textContent = 'Delete user - ' + userEdit.username;
+                document.getElementById('idEdit').value = userEdit.id;
+                document.getElementById('idDel').value = userEdit.id;
+                document.getElementById('usernameEdit').value = userEdit.username;
+                document.getElementById('usernameDel').value = userEdit.username;
+                document.getElementById('passwordEdit').value = userEdit.password;
+                document.getElementById('passwordDel').value = userEdit.password;
+
+                $.getJSON('http://localhost:8080/admin/getAllRoles', function (rolesDAO) {
+                    let li = [];
+                    for (let r in rolesDAO) {
+                        li.push('<li><input type="checkbox" name="rolesDAO" value="' + rolesDAO[r].id + '"');
+                        for (let x in userEdit.rolesDAO) {
+                            if (userEdit.rolesDAO[x].roleName == rolesDAO[r].roleName) {
+                                li.push(' checked');
+                            }
+                        }
+                        li.push('>' + rolesDAO[r].roleName + '</li>')
+                    }
+                    $('#rolesEdit').append($(li.join('')));
+                    $('#rolesDel').append($(li.join('')));
+                })
+            })
+        }
+    </script>
+
+    <script>
+        function sendFormUpdateProfile() {
+            $.post('http://localhost:8080/admin/edit',
+                $("#editProfileFineForm").serialize()
+            )
+            setTimeout(loadAdminPanel, 500);
+        }
+    </script>
+
+    <script>
+        function sendFormDeleteProfile() {
+
+            $.ajax({
+                type: 'DELETE',
+                url: 'http://localhost:8080/admin/delete/' + document.getElementById('idDel').value,
+                cache: false
+            });
+            setTimeout(loadAdminPanel, 500);
+        }
+    </script>
+</th:block>
+
+<script>
+    $(document).ready(function () {
+        $('#profileButton').click();
+    })
+</script>
+
+<script>
+    function loadProfile(id) {
+        $('#adminNav').empty();
+        $('#table-users').empty();
+        $('#panel').text('Profile');
+        $.getJSON('http://localhost:8080/user/getProfile/' + id, function (user) {
+                fillTableUsers(user);
+            }
+        )
+    }
+</script>
+
+<script>
+    function fillTableUsers(users) {
+        let tr = [];
+        for (let i in users) {
+            tr.push('<tr>');
+            tr.push('<td>' + users[i].id + '</td>');
+            tr.push('<td>' + users[i].username + '</td>');
+            tr.push('<td>' + users[i].password + '</td>');
+            tr.push('<td>');
+            for (let r in users[i].rolesDAO) {
+                tr.push(users[i].rolesDAO[r].roleName + '<br>');
+            }
+            tr.push('</td>');
+
+            tr.push('<td><button type="submit" class="btn btn-primary mb-3" data-toggle="modal"' +
+                ' data-target="#editProfileModal" onclick="getProfileForEdit(' + users[i].id + ');">Изменить</button></td>');
+            tr.push('<td><button type="submit" class="btn btn-danger" data-toggle="modal"' +
+                ' data-target="#deleteProfileModal" onclick="getProfileForEdit(' + users[i].id + ');">Удалить</button></td>');
+
+            tr.push('</tr>');
+        }
+        $('#table-users').append($(tr.join('')));
+    }
+</script>
+
+<th:block sec:authorize="!hasAnyRole('ROLE_ADMIN')">
+    <script>
+        function getProfileForEdit(id) {
+            $.getJSON('http://localhost:8080/user/getProfile/' + id, function (userEdit) {
+                let user = userEdit[0];
+                document.getElementById('editProfileModalLabel').textContent = 'Edit user - ' + user.username;
+                document.getElementById('deleteProfileModalLabel').textContent = 'Delete user - ' + user.username;
+                document.getElementById('idEdit').value = user.id;
+                document.getElementById('idDel').value = user.id;
+                document.getElementById('usernameEdit').value = user.username;
+                document.getElementById('usernameDel').value = user.username;
+                document.getElementById('passwordEdit').value = user.password;
+                document.getElementById('passwordDel').value = user.password;
+            })
+        }
+    </script>
+
+    <script>
+        function sendFormUpdateProfile() {
+            $.post('http://localhost:8080/user/editProfileFine',
+                $("#editProfileFineForm").serialize()
+            )
+            setTimeout(loadProfile, 500);
+        }
+    </script>
+
+    <script>
+        function sendFormDeleteProfile() {
+
+            $.ajax({
+                type: 'DELETE',
+                url: 'http://localhost:8080/user/deleteProfile/' + document.getElementById('idDel').value,
+                cache: false
+            });
+            $('#logout').click();
+        }
+    </script>
+</th:block>
+</body>
+</html>

@@ -1,0 +1,13 @@
+spring:
+  thymeleaf:
+    prefix: classpath:/templates/pages/
+    suffix: .html
+    cache: false
+    template-resolver-order: 1
+    enabled: true
+
+application:
+  server:
+    url: http://localhost:9090
+    username: client
+    password: client123
